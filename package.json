@@ -1,0 +1,23 @@
+{
+    "scripts": {
+        "start": "NODE_PATH=src nodemon --watch src/ --exec babel-node src/index.js NODE_ENV=DEVELOPMENT",
+        "prod": "npm run build && babel-node src/index.js NODE_ENV=PRODUCTION",
+        "build": "babel src -d build"
+    },
+    "dependencies": {
+        "aws-sdk": "^2.528.0",
+        "babel-node": "^0.0.1-security",
+        "body-parser": "^1.19.0",
+        "cors": "^2.8.5",
+        "express": "^4.17.1",
+        "node-fetch": "^2.6.0",
+        "node-ses": "^2.2.1",
+        "redis": "^2.8.0"
+    },
+    "devDependencies": {
+        "babel-cli": "^6.26.0",
+        "babel-core": "^6.26.3",
+        "babel-preset-env": "^1.7.0",
+        "babel-watch": "2.0.1"
+    }
+}
