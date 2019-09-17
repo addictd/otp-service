@@ -44,7 +44,8 @@ app.post("/resend_otp", msgController.resend_otp);
 app.post("/verify_otp", msgController.verify_otp );
 
 app.post("/subscribe", msgController.addSubscriber );
-
+app.post("/unsubscribe", msgController.removeSubscriber );
+app.post("/bulk_sms", msgController.sendBulkSms );
 
 const _port = process.env.PORT || config.PORT;
 console.log('App is started on port: ', _port)

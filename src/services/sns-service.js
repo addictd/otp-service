@@ -10,17 +10,28 @@ const _topicArn = 'arn:aws:sns:us-east-1:149162652215:dummy-sms'; //for promotio
 const sendSMS = async (props, cb) => {
     try {
         const { message, phone, type } = props;
-        if (!message || !phone || !type) throw errMsg.INCOMPLETE_PARAMS;
-
+        if (!message || !phone) throw errMsg.INCOMPLETE_PARAMS;
         var params = {
-            Message: message
+            Message: message,
+            PhoneNumber : phone
+        };
+        sns.publish(params, async (err, data) => {
+            if (err) throw err;
+            else { return cb(null, data); }
+        });
+    } catch (err) {
+        return cb(err);
+    }
+}
+const sendBulkSMS = async (props, cb) => {
+    try {
+        const { message } = props;
+        if (!message ) throw errMsg.INCOMPLETE_PARAMS;
+        var params = {
+            Message: message,
+            TopicArn : _topicArn
         };
         
-        if(type === "unknown"){
-            params.PhoneNumber = phone;
-        }else if(type === "known"){
-            params.TopicArn = _topicArn;
-        }
         sns.publish(params, async (err, data) => {
             if (err) throw err;
             else { return cb(null, data); }
@@ -30,10 +41,11 @@ const sendSMS = async (props, cb) => {
     }
 }
 
+
 const sendOTP = async (props, cb) => {
     try {
         const { phone } = props;
-        if ( !phone ) throw errMsg.INCOMPLETE_PARAMS;
+        if (!phone) throw errMsg.INCOMPLETE_PARAMS;
         // validate phone number
         const _otp = generate_otp();
         const message = get_otp_msg(_otp.value);
@@ -45,9 +57,9 @@ const sendOTP = async (props, cb) => {
         sns.publish(params, async (err, data) => {
             if (err) throw err;
             else {
-                data.otp_id = _otp.key; 
-                data.otp_value = _otp.value; 
-                return cb(null, data); 
+                data.otp_id = _otp.key;
+                data.otp_value = _otp.value;
+                return cb(null, data);
             }
         });
     } catch (err) {
@@ -56,9 +68,9 @@ const sendOTP = async (props, cb) => {
 }
 
 const addSmsSubscriber = (props, cb) => {
-    let {protocol, topicArn, endpoint } = props;
+    let { protocol, topicArn, endpoint } = props;
     try {
-        if( !endpoint ) throw errMsg.INCOMPLETE_PARAMS;
+        if (!endpoint) throw errMsg.INCOMPLETE_PARAMS;
 
         protocol = protocol || "sms";
         topicArn = topicArn || _topicArn;
@@ -69,8 +81,8 @@ const addSmsSubscriber = (props, cb) => {
         };
         sns.subscribe(params, function (err, data) {
             if (err) throw err;
-            else{
-                console.log('data======',data);   
+            else {
+                // console.log('data======',data);   
                 return cb(null, data);
             }
         });
@@ -79,17 +91,40 @@ const addSmsSubscriber = (props, cb) => {
     }
 }
 
+const removeSmsSubscriber = (props, cb) => {
+    console.log('props: ', props);
+    let { subscriptionArn } = props;
+    try {
+        if (!subscriptionArn) throw errMsg.INCOMPLETE_PARAMS;
+
+        var params = {
+            SubscriptionArn: subscriptionArn 
+        };
+        sns.unsubscribe(params, function (err, data) {
+            if (err) throw err;
+            else{
+                return cb(null, data);
+            }
+        });
+    } catch (err) {
+        // console.log('err======', err);
+        return cb(err);
+    }
+}
+
 const generate_otp = () => {
     var _random = Math.floor(1000 + Math.random() * 9000);
-    var _key = (new Date()).getTime() + _random ;
-    return { key : _key, value : _random };
+    var _key = (new Date()).getTime() + _random;
+    return { key: _key, value: _random };
 }
 const get_otp_msg = (otp) => (`KONFINITY.com : OTP is ${otp}`);
 
 const exportObj = {
     sendSMS: promisify(sendSMS),
-    addSmsSubscriber : promisify(addSmsSubscriber),
-    sendOTP : promisify(sendOTP)
+    sendBulkSMS : promisify(sendBulkSMS),
+    addSmsSubscriber: promisify(addSmsSubscriber),
+    removeSmsSubscriber: promisify(removeSmsSubscriber),
+    sendOTP: promisify(sendOTP)
 };
 
 export default exportObj;
